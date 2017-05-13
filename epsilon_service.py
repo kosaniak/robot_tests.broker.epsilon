@@ -101,7 +101,7 @@ def adapt_view_item_data(value, field_name):
 
 
 def get_upload_file_path():
-    return os.path.join(os.getcwd(), 'src/robot_tests.broker.epsilon/testFileForUpload.txt')
+    return os.path.join(os.getcwd(), 'src', 'robot_tests.broker.epsilon', 'testFileForUpload.txt')
 
 
 def epsilon_download_file(url, file_name, output_dir):
