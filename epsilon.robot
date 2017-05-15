@@ -596,3 +596,4 @@ Input Date
   epsilon.Пошук тендера по ідентифікатору   ${username}  ${tender_uaid}
   Wait Until Element Is Visible  xpath=//a[text()='Таблиця квалiфiкацiї']
   Click Element  xpath=//a[text()='Таблиця квалiфiкацiї']
+  Wait Until Keyword Succeeds  30 x  1 s  Page Should Contain Element  xpath=//*[contains(@class,"qtable")]
