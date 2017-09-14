@@ -46,14 +46,11 @@ Login
   ${items}=  Get From Dictionary  ${tender_data.data}  items
   ${number_of_items}=  Get Length  ${items}
   ${tenderAttempts}=   Convert To String   ${tender_data.data.tenderAttempts}
-  run keyword and ignore error  log  ${tender_data.data.items}
-  run keyword and ignore error  log  ${tender_data.data.items[0]}
-  run keyword and ignore error  log  ${tender_data.data.items[0]}
   Switch Browser  ${username}
-  Wait Until Page Contains Element  xpath=//a[@href="https://tbepsilon.com/tenders"]  10
-  Click Element  xpath=//a[@href="https://tbepsilon.com/tenders"]
-  Click Element  xpath=//a[@href="https://tbepsilon.com/tenders/index"]
-  Click Element  xpath=//a[contains(@href,"https://tbepsilon.com/buyer/tender/create")]
+  Wait Until Page Contains Element  xpath=//a[@href="http://test.tbepsilon.com/tenders"]  10
+  Click Element  xpath=//a[@href="http://test.tbepsilon.com/tenders"]
+  Click Element  xpath=//a[@href="http://test.tbepsilon.com/tenders/index"]
+  Click Element  xpath=//a[contains(@href,"/buyer/tender/create")]
   Select From List By Value  name=tender_method  open_${tender_data.data.procurementMethodType}
   Conv And Select From List By Value  name=Tender[value][valueAddedTaxIncluded]  ${tender_data.data.value.valueAddedTaxIncluded}
   ConvToStr And Input Text  name=Tender[value][amount]  ${tender_data.data.value.amount}
@@ -67,11 +64,11 @@ Login
   Input Date  name=Tender[dgfDecisionDate]  ${tender_data.data.dgfDecisionDate}
   Input Date  name=Tender[auctionPeriod][startDate]  ${tender_data.data.auctionPeriod.startDate}
   :FOR  ${index}  IN RANGE  ${number_of_items}
-  \  Run Keyword If  ${index} != 0  Click Element  xpath=(//button[contains(@class,'add_item')])[last()]
+  \  Run Keyword If  ${index} != 0  Click Element  xpath=(//button[contains(@id, "add-item")])[last()]
   \  Додати предмет  ${items[${index}]}  ${index}
-  Click Element  id=btn_submit_form
-  Wait Until Page Contains Element  xpath=//*[@tid="tenderID"]  10
-  ${tender_uaid}=  Get Text  xpath=//*[@tid="tenderID"]
+  Click Element  id=btn-submit-form
+  Wait Until Page Contains Element  xpath=//*[@data-test-id="tenderID"]  10
+  ${tender_uaid}=  Get Text  xpath=//*[@data-test-id="tenderID"]
   [return]  ${tender_uaid}
 
 Додати предмет
@@ -111,12 +108,11 @@ Login
   Switch Browser  ${username}
   epsilon.Пошук тендера по ідентифікатору  ${username}  ${tender_uaid}
   Click Element  xpath=//a[contains(text(),'Редагувати')]
-  Wait Until Element Is Visible  xpath=(//input[@name="FileUpload[file]"]/ancestor::a[contains(@class,'uploadfile')])[last()]
   Choose File  xpath=(//*[@name="FileUpload[file]"])[last()]  ${filepath}
-  Select From List By Value   xpath=//label[text()='${filepath.split('/')[-1]}']/../../descendant::*[contains(@name,"[documentType]")]   illustration
-  Input Text  xpath=//label[text()='${filepath.split('/')[-1]}']/../../descendant::input[contains(@name,'[title]')]   ${filepath.split('/')[-1]}
-  Click Button  id=btn_submit_form
-  Wait Until Element Is Not Visible   id=btn_submit_form
+  Select From List By Value   xpath=(//*[@class="document-type"])[last()]   illustration
+  #Input Text  xpath=//label[text()='${filepath.split('/')[-1]}']/../../descendant::input[contains(@name,'[title]')]   ${filepath.split('/')[-1]}
+  Click Button  id=btn-submit-form
+  Wait Until Element Is Not Visible   id=btn-submit-form
   Дочекатися завантаження документу
 
 Завантажити ілюстрацію
@@ -132,11 +128,13 @@ Login
   [Arguments]  ${username}  ${tender_uaid}  ${vdr_url}  ${title}=Sample Virtual Data Room
   epsilon.Пошук тендера по ідентифікатору   ${username}   ${tender_uaid}
   Click Element  xpath=//a[contains(text(),'Редагувати')]
-  Wait Until Element Is Visible  xpath=//a[contains(@class,'virtualDataRoom')]
-  Click Element  xpath=//a[contains(@class,'virtualDataRoom')]
-  Wait Until Element Is Visible  xpath=(//input[contains(@name,'[url]')])[last()]
-  Input Text  xpath=(//input[contains(@name,'[url]')])[last()]  ${vdr_url}
-  Click Button  id=btn_submit_form
+  Wait Until Element Is Visible  xpath=//*[@id="add-link"]
+  Wait Until Keyword Succeeds  10 x  1 s  Select From List By Value  id="modal-document-type"  virtualDataRoom
+  Click Element  xpath=//*[@data-bb-handler="confirm"]
+  Wait Until Element Is Visible  xpath=(//*[@class="document-url"])[last()]
+  Input Text  xpath=(//*[@class="document-title"])[last()]  ${title}
+  Input Text  xpath=(//*[@class="document-url"])[last()]  ${vdr_url}
+  Click Button  id=btn-submit-form
 
 Завантажити документ в тендер з типом
   [Arguments]  ${username}  ${tender_uaid}  ${filepath}  ${documentType}
@@ -146,44 +144,49 @@ Login
   Choose File  xpath=(//*[@name="FileUpload[file]"])[last()]  ${filepath}
   Select From List By Value   xpath=//label[text()='${filepath.split('/')[-1]}']/../../descendant::*[contains(@name,"[documentType]")]   ${documentType}
   Input Text  xpath=//label[text()='${filepath.split('/')[-1]}']/../../descendant::input[contains(@name,'[title]')]   ${filepath.split('/')[-1]}
-  Click Button  id=btn_submit_form
-  Wait Until Keyword Succeeds  20 x  1 s  Element Should Not Be Visible  id=btn_submit_form
+  Click Button  id=btn-submit-form
+  Wait Until Keyword Succeeds  20 x  1 s  Element Should Not Be Visible  id=btn-submit-form
   Дочекатися завантаження документу
 
 Додати публічний паспорт активу
   [Arguments]  ${username}  ${tender_uaid}  ${certificate_url}  ${title}=Public Asset Certificate
   epsilon.Пошук тендера по ідентифікатору   ${username}   ${tender_uaid}
   Click Element  xpath=//a[contains(text(),'Редагувати')]
-  Click Element  id=addPublicCertificate
-  Wait Until Element Is Visible  xpath=(//div[contains(@class, 'certificate_block')]/descendant::input[contains(@name,'[url]')])[last()]
-  Input Text  xpath=(//div[contains(@class,'certificate_block')]/descendant::input[contains(@name,'[url]')])[last()]  ${certificate_url}
+  Wait Until Element Is Visible  xpath=//*[@id="add-link"]
+  Wait Until Keyword Succeeds  10 x  1 s  Select From List By Value  id="modal-document-type"  x_dgfPublicAssetCertificate
+  Click Element  xpath=//*[@data-bb-handler="confirm"]
+  Wait Until Element Is Visible  xpath=(//*[@class="document-url"])[last()]
+  Input Text  xpath=(//*[@class="document-title"])[last()]  ${title}
+  Input Text  xpath=(//*[@class="document-url"])[last()]  ${certificate_url}
+  Click Button  id=btn-submit-form
 
 Додати офлайн документ
   [Arguments]  ${username}  ${tender_uaid}  ${accessDetails}  ${title}=Familiarization with bank asset
   epsilon.Пошук тендера по ідентифікатору   ${username}   ${tender_uaid}
   Click Element  xpath=//a[contains(text(),'Редагувати')]
-  Click Element  id=addDocWtDoc
-  Wait Until Element Is Visible  xpath=(//div[contains(@class, 'docwdoc_block')]/descendant::textarea[contains(@name,'[accessDetails]')])[last()]
-  Input Text  xpath=(//div[contains(@class,'docwdoc_block')]/descendant::textarea[contains(@name,'[accessDetails]')])[last()]  ${accessDetails}
+  Wait Until Element Is Visible  xpath=//*[@id="add-link"]
+  Wait Until Keyword Succeeds  10 x  1 s  Select From List By Value  id="modal-document-type"  x_dgfAssetFamiliarization
+  Click Element  xpath=//*[@data-bb-handler="confirm"]
+  Wait Until Element Is Visible  xpath=(//*[@class="document-url"])[last()]
+  Input Text  xpath=(//*[@class="document-title"])[last()]  ${title}
+  Input Text  xpath=(//*[@class="document-url"])[last()]  ${accessDetails}
+  Click Button  id=btn-submit-form
 
 Пошук тендера по ідентифікатору
   [Arguments]  ${username}  ${tender_uaid}
   Switch browser  ${username}
-  Go To  https://tbepsilon.com/tenders/index
+  Go To  http://test.tbepsilon.com/tenders/index
   ${status}=  Run Keyword And Return Status  Wait Until Element Is Visible  xpath=//button[@data-dismiss="modal"]  5
   Run Keyword If  ${status}  Wait Until Keyword Succeeds  10 x  1 s  Закрити модалку з новинами
-  Wait Until Element Is Visible  id=slide-more-filter
-  Wait Until Keyword Succeeds  10 x  0.4 s  Run Keywords
-  ...  Click Element  id=slide-more-filter
-  ...  AND  Wait Until Element Is Visible  name=TendersSearch[tender_cbd_id]
-  Input text  name=TendersSearch[tender_cbd_id]  ${tender_uaid}
-  Click Element  xpath=//button[@tid="search"]
+  Wait Until Element Is Visible  id=tenderssearch-tender_cbd_id
+  Input text  id=tenderssearch-tender_cbd_id  ${tender_uaid}
+  Click Element  xpath=//button[@data-test-id="search"]
   Wait Until Keyword Succeeds  30x  400ms  Перейти на сторінку з інформацією про тендер  ${tender_uaid}
 
 Перейти на сторінку з інформацією про тендер
   [Arguments]  ${tender_uaid}
-  Click Element  xpath=//h3[contains(text(),'${tender_uaid}') and contains('${tender_uaid}', text())]/ancestor::div[@class="panel panel-default"]/descendant::a
-  Wait Until Element Is Visible  xpath=//*[@tid="tenderID"]
+  Click Element  xpath=//*[contains(text(),'${tender_uaid}') and contains('${tender_uaid}', normalize-space(text()))]/ancestor::div[@class="search-result"]/descendant::a[contains(@href,"/view/")]
+  Wait Until Keyword Succeeds  20 x  1 s  Element Should Be Visible  xpath=//*[@data-test-id="tenderID"]
 
 Оновити сторінку з тендером
   [Arguments]  ${username}  ${tender_uaid}
@@ -196,11 +199,11 @@ Login
   epsilon.Пошук тендера по ідентифікатору  ${username}  ${tender_uaid}
   Click Element  xpath=//a[contains(text(),'Редагувати')]
   Choose File  xpath=(//*[@name="FileUpload[file]"])[last()]  ${filepath}
-  Select From List By Value   xpath=//label[text()='${filepath.split('/')[-1]}']/../../descendant::*[contains(@name,"[documentType]")]   clarifications
+  Select From List By Value   xpath=//input[contains(@value, '${filepath.split('/')[-1].split('.')[1]}')]/../descendant::*[contains(@name,"[documentType]")]   clarifications
   Run Keyword If  "${field_name}" == "tenderAttempts"  Select From List By Value  name=Tender[${field_name}]  ${field_value}
   ...  ELSE IF  "Date" in "${field_name}"  Input Date  name=Tender[${field_name}]  ${field_value}
   ...  ELSE  Input text  name=Tender[${field_name}]  ${field_value}
-  Click Element  id=btn_submit_form
+  Click Element  id=btn-submit-form
   Wait Until Element Is Visible  xpath=//div[contains(@class,'alert-success')]
   #Wait Until Page Contains  ${field_value}  30
 
@@ -228,8 +231,8 @@ Login
 Задати питання
   [Arguments]  ${username}  ${tender_uaid}  ${question}  ${item_id}=False
   epsilon.Пошук тендера по ідентифікатору  ${username}  ${tender_uaid}
-  Wait Until Element Is Enabled  xpath=//a[@tid="sidebar.questions"]
-  Click Element  xpath=//a[@tid="sidebar.questions"]
+  Wait Until Element Is Enabled  xpath=//a[@data-test-id="sidebar.questions"]
+  Click Element  xpath=//a[@data-test-id="sidebar.questions"]
   ${status}  ${item_option}=   Run Keyword And Ignore Error   Get Text   //option[contains(text(), '${item_id}')]
   Run Keyword If  '${status}' == 'PASS'   Select From List By Label  name=Question[questionOf]  ${item_option}
   Input Text  name=Question[title]  ${question.data.title}
@@ -248,10 +251,10 @@ Login
 Відповісти на запитання
   [Arguments]  ${username}  ${tender_uaid}  ${answer_data}  ${question_id}
   epsilon.Пошук тендера по ідентифікатору  ${username}  ${tender_uaid}
-  ${status_modal}=  RunKeyword And Return Status  Element Should Be Visible  xpath=//button[@data-dismiss="modal"]
+  ${status_modal}=  Run Keyword And Return Status  Element Should Be Visible  xpath=//button[@data-dismiss="modal"]
   Run Keyword If  ${status_modal}  Wait Until Keyword Succeeds  10 x  1 s  Закрити модалку з новинами
-  Wait Until Element Is Enabled  xpath=//a[@tid="sidebar.questions"]
-  Click Element  xpath=//a[@tid="sidebar.questions"]
+  Wait Until Element Is Enabled  xpath=//a[@data-test-id="sidebar.questions"]
+  Click Element  xpath=//a[@data-test-id="sidebar.questions"]
   Wait Until Element Is Visible  xpath=//h4[contains(text(),'${question_id}')]/../descendant::textarea[contains(@name,'[answer]')]
   Input text  xpath=//h4[contains(text(),'${question_id}')]/../descendant::textarea[contains(@name,'[answer]')]  ${answer_data.data.answer}
   Click Element  xpath=//h4[contains(text(),'${question_id}')]/following-sibling::button[@name="answer_question_submit"]
@@ -264,15 +267,14 @@ Login
 Отримати інформацію із тендера
   [Arguments]  ${username}  ${tender_uaid}  ${field_name}
   ${red}=  Evaluate  "\\033[1;31m"
+  Run Keyword If  'title' in '${field_name}'  Execute Javascript  $("[data-test-id|='title']").css("text-transform", "unset")
   ${value}=  Run Keyword If
   ...  'awards' in '${field_name}'  Отримати інформацію про авард  ${username}  ${tender_uaid}  ${field_name}
   ...  ELSE IF  'status' in '${field_name}'  Отримати інформацію про статус  ${field_name}
-  ...  ELSE IF  'value' in '${field_name}'  Get Text  xpath=//*[@tid="value.amount"]
-  ...  ELSE IF  '${field_name}' == 'auctionPeriod.startDate'  Get Text  xpath=//*[@tid="auctionPeriod.startDate"]
-  #...  ELSE IF  '${field_name}' == 'dgfDecisionDate'  Get Element Attribute  xpath=//*[@tid="dgfDecisionDate"]@data-ddate
-  ...  ELSE IF  '${field_name}' == 'tenderAttempts'  Get Element Attribute  xpath=//*[@tid="tenderAttempts"]@data-test-tenderattempts
-  ...  ELSE IF  'cancellations' in '${field_name}'  Get Text  xpath=//*[@tid="${field_name.replace('[0]','')}"]
-  ...  ELSE  Get Text  xpath=//*[@tid="${field_name.replace('auction', 'tender')}"]
+  ...  ELSE IF  '${field_name}' == 'auctionPeriod.startDate'  Get Text  xpath=//*[@data-test-id="auctionPeriod.startDate"]
+  ...  ELSE IF  '${field_name}' == 'tenderAttempts'  Get Element Attribute  xpath=//*[@data-test-id="tenderAttempts"]@data-test-value
+  ...  ELSE IF  'cancellations' in '${field_name}'  Get Text  xpath=//*[@data-test-id="${field_name.replace('[0]','')}"]
+  ...  ELSE  Get Text  xpath=//*[@data-test-id="${field_name.replace('auction', 'tender')}"]
   ${value}=  adapt_view_data  ${value}  ${field_name}
   [return]  ${value}
 
@@ -282,7 +284,7 @@ Login
   Reload Page
   ${value}=  Run Keyword If  'cancellations' in '${field_name}'
   ...  Get Text  xpath=//div[contains(@class,'alert-danger')]/h3[1]
-  ...  ELSE  Get Text  xpath=//h2[@tid="${field_name.split('.')[-1]}"]
+  ...  ELSE  Get Text  xpath=//*[@data-test-id="${field_name.split('.')[-1]}"]
   [return]  ${value.lower()}
 
 Отримати інформацію із предмету
@@ -292,8 +294,7 @@ Login
   ${value}=  Run Keyword If
   ...  'unit.code' in '${field_name}'  Log To Console   ${red}\n\t\t\t Це поле не виводиться на epsilon
   ...  ELSE IF  'deliveryLocation' in '${field_name}'  Log To Console  ${red}\n\t\t\t Це поле не виводиться на epsilon
-  ...  ELSE IF  'unit' in '${field_name}'  Get Text  xpath=//*[contains(text(), '${item_id}')]/ancestor::div[@class="lot"]/descendant::*[@tid='items.quantity']
-  ...  ELSE  Get Text  xpath=//*[contains(text(), '${item_id}')]/ancestor::div[@class="lot"]/descendant::*[@tid='items.${field_name}']
+  ...  ELSE  Get Text  xpath=//*[contains(text(), '${item_id}')]/ancestor::div[contains(@class,"item-inf_txt")]/descendant::*[@data-test-id='item.${field_name}']
   ${value}=  adapt_view_item_data  ${value}  ${field_name}
   [return]  ${value}
 
@@ -306,9 +307,9 @@ Login
 Отримати інформацію із запитання
   [Arguments]  ${username}  ${tender_uaid}  ${question_id}  ${field_name}
   epsilon.Пошук тендера по ідентифікатору  ${username}  ${tender_uaid}
-  Wait Until Element Is Enabled  xpath=//a[@tid="sidebar.questions"]
-  Click Element  xpath=//a[@tid="sidebar.questions"]
-  ${value}=  Get Text  xpath=//h4[contains(text(),'${question_id}')]/../descendant::*[@tid='questions.${field_name}']
+  Wait Until Element Is Enabled  xpath=//a[@data-test-id="sidebar.questions"]
+  Click Element  xpath=//a[@data-test-id="sidebar.questions"]
+  ${value}=  Get Text  xpath=//*[contains(text(),'${question_id}')]/../descendant::*[@data-test-id='question.${field_name}']
   [return]  ${value}
 
 Отримати інформацію із пропозиції
@@ -332,13 +333,13 @@ Login
 Отримати кількість документів в тендері
   [Arguments]  ${username}  ${tender_uaid}
   epsilon.Пошук тендера по ідентифікатору  ${username}  ${tender_uaid}
-  ${number_of_documents}=  Get Matching Xpath Count  //div[@class="document"]
+  ${number_of_documents}=  Get Matching Xpath Count  //*[@data-test-id="document.title"]
   [return]  ${number_of_documents}
 
 Отримати інформацію із документа по індексу
   [Arguments]  ${username}  ${tender_uaid}  ${document_index}  ${field}
   epsilon.Пошук тендера по ідентифікатору  ${username}  ${tender_uaid}
-  ${doc_value}=  Get Text  xpath=(//div[@class="document"])[${document_index + 1}]/div[2]/div[2]/span
+  ${doc_value}=  Get Text  xpath=(//*[@data-test-id="documentType"])[${document_index + 1}]
   ${doc_value}=  convert_string_from_dict_epsilon  ${doc_value}
   [return]  ${doc_value}
 
@@ -362,28 +363,31 @@ Login
   ${file_path}=  get_upload_file_path
   epsilon.Пошук тендера по ідентифікатору   ${username}  ${tender_uaid}
   Run Keyword And Ignore Error  epsilon.Скасувати цінову пропозицію  ${username}  ${tender_uaid}
-  Wait Until Element Is Visible   xpath=//input[contains(@name, '[value][amount]')]
-  ConvToStr And Input Text  xpath=//input[contains(@name, '[value][amount]')]  ${bid.data.value.amount}
+  Run Keyword If  '${MODE}' != 'dgfInsider'  ConvToStr And Input Text  xpath=//input[contains(@name, '[value][amount]')]  ${bid.data.value.amount}
+  ...  ELSE  Click Element  xpath=//input[@id="bid-participate"]/..
   Choose File  name=FileUpload[file]  ${file_path}
-  Run Keyword If  '${MODE}' == 'dgfFinancialAssets'
+  Run Keyword If  '${MODE}' == 'dgfFinancialAssets'  Run Keywords
   ...  Select From List By Value  xpath=(//*[contains(@name,'[documentType]')])[last()]  financialLicense
+  ...  AND  Click Element  xpath=//*[@id="bid-checkforunlicensed"]/..
   ...  ELSE  Select From List By Value  xpath=(//*[contains(@name,'[documentType]')])[last()]  commercialProposal
-  Click Element  xpath=//*[@id="bid-checkforunlicensed"]/..
   Click Element  xpath=//button[contains(text(), 'Відправити')]
-  Wait Until Element Is Visible  name=delete_bids
+  Wait Until Element Is Visible  xpath=//div[contains(@class,'alert-success')]
+  Run Keyword If  '${MODE}' != 'dgfInsider'  Опублікувати Пропозицію  ${status}
+
+Опублікувати Пропозицію
+  [Arguments]  ${status}
   ${url}=  Log Location
   Run Keyword If  ${status}
-  ...  Go To  https://tbepsilon.com/bids/send/${url.split('?')[0].split('/')[-1]}?token=465
-  ...  ELSE  Go To  https://tbepsilon.com/bids/decline/${url.split('?')[0].split('/')[-1]}
+  ...  Go To  http://test.tbepsilon.com/bids/send/${url.split('?')[0].split('/')[-1]}?token=465
+  ...  ELSE  Go To  http://test.tbepsilon.com/bids/decline/${url.split('?')[0].split('/')[-1]}?token=465
   Go To  ${url}
   Wait Until Keyword Succeeds  6 x  30 s  Run Keywords
   ...  Reload Page
-  ...  AND  Page Should Contain  Статус - опублiковано
+  ...  AND  Page Should Contain  опубліковано
 
 Скасувати цінову пропозицію
   [Arguments]  ${username}  ${tender_uaid}
   epsilon.Пошук тендера по ідентифікатору   ${username}  ${tender_uaid}
-  #Execute Javascript  window.confirm = function(msg) { return true; }
   Click Element  xpath=//button[@name="delete_bids"]
   Wait Until Element Is Visible  xpath=//button[@data-bb-handler="confirm"]
   Click Element  xpath=//button[@data-bb-handler="confirm"]
@@ -402,28 +406,25 @@ Login
   ...  ELSE  Select From List By Value  xpath=(//*[contains(@name,'[documentType]')])[last()]  commercialProposal
   Click Element  xpath=//*[@id="bid-checkforunlicensed"]/..
   Click Element  xpath=//button[contains(text(), 'Відправити')]
-  Wait Until Element Is Visible  name=delete_bids
-  ${url}=  Log Location
-  Go To  https://tbepsilon.com/bids/send/${url.split('?')[0].split('/')[-1]}?token=465
-  Go To  ${url}
+  Wait Until Element Is Visible  xpath=//div[contains(@class,'alert-success')]
+  Опублікувати Пропозицію  ${True}
 
 Завантажити документ в ставку
   [Arguments]  ${username}  ${path}  ${tender_uaid}  ${doc_type}=documents
   epsilon.Пошук тендера по ідентифікатору   ${username}  ${tender_uaid}
-  ${value}=  epsilon.Отримати інформацію із пропозиції  ${username}  ${tender_uaid}  ${EMPTY}
-  epsilon.Скасувати цінову пропозицію  ${username}  ${tender_uaid}
-  Wait Until Element Is Visible   xpath=//input[contains(@name, '[value][amount]')]
-  ConvToStr And Input Text  xpath=//input[contains(@name, '[value][amount]')]  ${value}
+  ${value}=  Run Keyword If  '${MODE}' != 'dgfInsider'  Run Keywords
+  ...  epsilon.Отримати інформацію із пропозиції  ${username}  ${tender_uaid}  ${EMPTY}
+  ...  AND  epsilon.Скасувати цінову пропозицію  ${username}  ${tender_uaid}
+  ...  AND  Wait Until Element Is Visible   xpath=//input[contains(@name, '[value][amount]')]
+  ...  AND  ConvToStr And Input Text  xpath=//input[contains(@name, '[value][amount]')]  ${value}
+  ...  AND  Click Element  xpath=//*[@id="bid-checkforunlicensed"]/..
   Choose File  name=FileUpload[file]  ${path}
-  Run Keyword If  '${MODE}' == 'dgfFinancialAssets'
+  Run Keyword If  '${MODE}' != 'dgfOtherAssets'
   ...  Select From List By Value  xpath=(//*[contains(@name,'[documentType]')])[last()]  financialLicense
   ...  ELSE  Select From List By Value  xpath=(//*[contains(@name,'[documentType]')])[last()]  commercialProposal
-  Click Element  xpath=//*[@id="bid-checkforunlicensed"]/..
   Click Element  xpath=//button[contains(text(), 'Відправити')]
-  Wait Until Element Is Visible  name=delete_bids
-  ${url}=  Log Location
-  Go To  https://tbepsilon.com/bids/send/${url.split('?')[0].split('/')[-1]}?token=465
-  Go To  ${url}
+  Wait Until Element Is Visible  xpath=//div[contains(@class,'alert-success')]
+  Опублікувати Пропозицію  ${True}
 
 Завантажити фінансову ліцензію
   [Arguments]  ${username}  ${tender_uaid}  ${filepath}
@@ -446,8 +447,11 @@ Login
 Отримати посилання на аукціон для учасника
   [Arguments]  ${username}  ${tender_uaid}
   epsilon.Пошук тендера по ідентифікатору   ${username}  ${tender_uaid}
-  ${auction_url}  Get Element Attribute  xpath=(//a[contains(@href, "openprocurement.org/auctions")])[1]@href
-  [return]  ${auction_url}
+  Click Element  xpath=//a[@class="auction_seller_url"]
+  Select Window  new
+  ${auction_url}=  Get Location
+  Select Window
+  [return]  ${auction_url.split("&return_url")[0]}
 
 
 ###############################################################################################################
