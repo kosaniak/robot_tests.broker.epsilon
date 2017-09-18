@@ -27,9 +27,10 @@ def convert_datetime_to_epsilon_format(isodate):
 def convert_string_from_dict_epsilon(string):
     return {
         u"грн": u"UAH",
+        u"Голландський аукціон": u"dgfInsider",
         u"True": u"1",
         u"False": u"0",
-        u'Код CAV': u'CAV',
+        u'Класифікація згідно CAV': u'CAV',
         u'з урахуванням ПДВ': True,
         u'без урахуванням ПДВ': False,
         u'очiкування пропозицiй': u'active.tendering',
@@ -70,32 +71,26 @@ def adapt_procuringEntity(role_name, tender_data):
 
 def adapt_view_data(value, field_name):
     if field_name == 'value.amount':
-        value = float(value.split(' ')[0])
-    elif field_name == 'value.currency':
-        value = value.split(' ')[1]
-    elif field_name == 'value.valueAddedTaxIncluded':
-        value = ' '.join(value.split(' ')[2:])
+        value = float(value)
     elif field_name == 'minimalStep.amount':
         value = float(value.split(' ')[0])
     elif field_name == 'tenderAttempts':
         value = int(value)
-    elif 'unit.name' in field_name:
-        value = value.split(' ')[1]
     elif 'quantity' in field_name:
         value = float(value.split(' ')[0])
     elif 'questions' in field_name and '.date' in field_name:
         value = convert_time(value.split(' - ')[0])
     elif field_name == 'dgfDecisionDate':
         return convert_decision_date(value.split(" ")[-1])
+    elif field_name == 'dgfDecisionID':
+        value = value.split(" ")[1]
     elif 'Date' in field_name:
         value = convert_time(value)
     return convert_string_from_dict_epsilon(value)
 
 
 def adapt_view_item_data(value, field_name):
-    if 'unit.name' in field_name:
-        value = ' '.join(value.split(' ')[1:])
-    elif 'quantity' in field_name:
+    if 'quantity' in field_name:
         value = float(value.split(' ')[0])
     return convert_string_from_dict_epsilon(value)
 
